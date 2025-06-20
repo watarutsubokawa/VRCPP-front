@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.VRCLogDatabase = void 0;
 const sqlite3 = require("sqlite3");
+const VRCtypes_1 = require("./modules/VRCtypes");
 class VRCLogDatabase extends sqlite3.Database {
     constructor(filename, callback) {
         super(filename, callback);
@@ -109,13 +110,33 @@ class VRCLogDatabase extends sqlite3.Database {
     }
     getUsers() {
         return new Promise((resolve, reject) => {
-            this.all(`SELECT username, vrchat_internal_id, last_seen FROM users;`, function (err, rows) {
+            this.all(`SELECT id, username, vrchat_internal_id, last_seen FROM users;`, function (err, rows) {
                 if (err == null) {
                     resolve(rows.map(row => ({
+                        id: row.id,
                         username: row.username,
                         vrchat_internal_id: row.vrchat_internal_id,
                         last_seen: row.last_seen
                     })));
+                }
+                else {
+                    reject(err);
+                }
+            });
+        });
+    }
+    getUserById(id) {
+        return new Promise((resolve, reject) => {
+            this.all(`SELECT username, vrchat_internal_id FROM users WHERE id = ?`, id, function (err, row) {
+                if (err == null) {
+                    if (row.length === 1)
+                        resolve(new VRCtypes_1.User({
+                            id: id,
+                            vrc_internal_id: row[0].vrchat_internal_id,
+                            name: row[0].username
+                        }));
+                    else
+                        reject(new Error("A user expected to exist was not found"));
                 }
                 else {
                     reject(err);
@@ -129,6 +150,29 @@ class VRCLogDatabase extends sqlite3.Database {
                 if (err == null) {
                     //@ts-ignore
                     resolve(this.lastID);
+                }
+                else {
+                    reject(err);
+                }
+            });
+        });
+    }
+    getExchangesByUserId(userId) {
+        return new Promise((resolve, reject) => {
+            this.all(`
+                SELECT * FROM exchanges
+                INNER JOIN sessions
+                    ON exchanges.session_id = sessions.id
+                WHERE user_id = ?;`, userId, function (err, rows) {
+                if (!err) {
+                    resolve(rows.map(row => new VRCtypes_1.Exchange({
+                        worldName: row.world_name,
+                        exchangeId: row.id,
+                        begin: row.start_time,
+                        end: row.end_time,
+                        user: row.user_id,
+                        session: row.session_id,
+                    })));
                 }
                 else {
                     reject(err);

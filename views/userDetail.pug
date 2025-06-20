@@ -1,0 +1,21 @@
+extends layout
+block content
+    h1 #{`Details of exchanges between You and ${userName}(${userInternalId})`}
+    table(border=1)
+        thead
+            tr
+                th date
+                th start
+                th end
+                th duration
+                th world
+        tbody
+            each exchange in exchanges
+                - function z2(i) {return i >= 10 ? String(i) : "0" + String(i)}
+                - const t = (exchange.end.getTime() - exchange.begin.getTime()) / 1000
+                tr
+                    td= `${exchange.begin.getFullYear()}/${exchange.begin.getMonth()+1}/${exchange.begin.getDate()}`
+                    td= `${z2(exchange.begin.getHours())}:${z2(exchange.begin.getMinutes())}:${z2(exchange.begin.getSeconds())}`
+                    td= `${z2(exchange.end.getHours())}:${z2(exchange.end.getMinutes())}:${z2(exchange.end.getSeconds())}`
+                    td= `${t>=86400?String(Math.floor(t/86400))+"d":""} ${t>=3600?String(Math.floor((t%86400)/3600))+"h":""} ${Math.floor((t%3600)/60)}m ${Math.floor(t%60)}s`
+                    td= exchange.worldName
