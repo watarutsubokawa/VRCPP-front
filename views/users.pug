@@ -1,0 +1,15 @@
+extends layout
+
+block content
+    h1 users
+    table
+        thead
+            tr
+                th Username
+                th User Details
+        tbody
+            each user in users
+                tr
+                    td= user.username
+                    td
+                        a(href=`/users/${user.vrchat_internal_id}`)= `Show ${user.username}'s details >`
