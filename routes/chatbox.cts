@@ -2,8 +2,12 @@ const express = require('express');
 const router = express.Router();
 const osc_client = require('node-osc').Client;
 
-router.get('/', function(req:any, res:any, next:any) {
-    res.render('chatbox', {title: "Chat"});
+router.get('/ja', function(req:any, res:any, next:any) {
+    res.render('chatbox', {title: "Chat", lang: 'ja-JP'});
+})
+
+router.get('/en', function(req:any, res:any, next:any) {
+    res.render('chatbox', {title: "Chat", lang: 'en-US'});
 })
 
 router.all('/message', function(req:any, res:any, next:any) {

@@ -1,21 +1,46 @@
 extends layout
 
 block content
-    input#message(type="string" name="message")
-    button#sendButton send
+    button#detectStartButton start detection
+    button#detectEndButton(disabled) end detection
+
     script.
+        let isDetectionActive = false
         function $(s) {return document.querySelector(s)}
         function $$(s) {return document.querySelectorAll(s)}
+        async function sendMessage(s) {return await fetch('/chatbox/message?message='+s)}
 
-        $("#sendButton").addEventListener("click", async() => {
-            try {
-                if (!window.confirm($("#message").value)) throw new Error();
-                const res = await fetch(`/chatbox/message?message=${$("#message").value}`);
-                if (res.status < 200 || 300 <= res.status) {
-                    window.alert('Failed with status code ' + res.status)
-                } else window.alert('succeeded')
-            } catch(e) {
-                console.error(e)
-                window.alert('failed')
+        var SpeechRecognition = SpeechRecognition || webkitSpeechRecognition
+        var SpeechRecognitionEvent = SpeechRecognitionEvent || webkitSpeechRecognitionEvent
+
+        let recognition;
+
+        $('#detectStartButton').addEventListener('click', function() {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = '!{lang}';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+            recognition.onresult = async function (event) {
+                const str = event.results[0][0].transcript
+                await sendMessage(str)
             }
+            recognition.onspeechend = function () {
+                recognition.stop()
+                if (isDetectionActive) $('#detectStartButton').dispatchEvent(new Event('click'))
+            }
+            recognition.onnomatch = () => recognition.onspeechend()
+            recognition.onerror = () => recognition.onspeechend()
+
+            recognition.start()
+            $('#detectStartButton').disabled = true
+            $('#detectEndButton').disabled = false
+            isDetectionActive = true
+        })
+
+        $('#detectEndButton').addEventListener('click', function () {
+            $('#detectStartButton').disabled = false
+            $('#detectEndButton').disabled = true
+            isDetectionActive = false
+            recognition.stop()
         })
