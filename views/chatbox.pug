@@ -1,0 +1,21 @@
+extends layout
+
+block content
+    input#message(type="string" name="message")
+    button#sendButton send
+    script.
+        function $(s) {return document.querySelector(s)}
+        function $$(s) {return document.querySelectorAll(s)}
+
+        $("#sendButton").addEventListener("click", async() => {
+            try {
+                if (!window.confirm($("#message").value)) throw new Error();
+                const res = await fetch(`/chatbox/message?message=${$("#message").value}`);
+                if (res.status < 200 || 300 <= res.status) {
+                    window.alert('Failed with status code ' + res.status)
+                } else window.alert('succeeded')
+            } catch(e) {
+                console.error(e)
+                window.alert('failed')
+            }
+        })
